@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using tiki_shop.Models;
 
@@ -11,9 +12,10 @@ using tiki_shop.Models;
 namespace tiki_shop.Migrations
 {
     [DbContext(typeof(TikiDbContext))]
-    partial class TikiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220730111123_AddProduct")]
+    partial class AddProduct
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -272,10 +274,6 @@ namespace tiki_shop.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Fullname")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -299,12 +297,11 @@ namespace tiki_shop.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "3c05f411-5e5c-40db-84fb-adc88a6baf3a",
+                            Id = "dc16c911-6047-4d6d-a0dd-1676b9668071",
                             Address = "Hà Nội",
                             Balance = 0f,
                             Commission = 0f,
                             Email = "admin@email.com",
-                            Fullname = "Admin nè",
                             Password = "$2a$10$MEhfF4w8ga3GGcJrMW7iWu6RG0A1kUqC0FM0R9BbJjSd3yKxgBLM2",
                             PhoneNumber = "0123456789",
                             RoleId = 1,
