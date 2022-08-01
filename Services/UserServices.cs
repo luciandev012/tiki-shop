@@ -17,10 +17,12 @@ namespace tiki_shop.Services
     {
         private readonly TikiDbContext _context;
         private readonly IConfiguration _configuration;
-        public UserServices(TikiDbContext context, IConfiguration configuration)
+        private readonly IHttpContextAccessor _contextAccessor;
+        public UserServices(TikiDbContext context, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _configuration = configuration;
+            _contextAccessor = httpContextAccessor;
         }
 
         public async Task<Result<bool>> AddUser(UserRequest userRequest)
@@ -36,7 +38,8 @@ namespace tiki_shop.Services
                     Password = Bcrypt.HashPassword(userRequest.Password, salt),
                     RoleId = 2,
                     Id = Guid.NewGuid().ToString(),
-                    Status = true
+                    Status = true,
+                    Fullname = userRequest.FullName
                 };
                 await _context.Users.AddAsync(user);
                 await _context.SaveChangesAsync();
@@ -49,6 +52,36 @@ namespace tiki_shop.Services
             }
         }
 
+        public async Task<Result<string>> ChangePassword(string phoneNumber, string oldPassword, string newPassowrd)
+        {
+            try
+            {
+                ClaimsPrincipal User = _contextAccessor.HttpContext.User;
+                var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var foundUser = await _context.Users.FindAsync(id);
+                if(foundUser.PhoneNumber != phoneNumber)
+                {
+                    return new Result<string> { Message = "Phone number not match", Success = false };
+                }
+                else
+                {
+                    if(!Bcrypt.Verify(oldPassword, foundUser.Password))
+                    {
+                        return new Result<string> { Message = "Password not correct", Success = false };
+                    }
+                    var salt = Bcrypt.GenerateSalt(10);
+                    foundUser.Password = Bcrypt.HashPassword(newPassowrd, salt);
+                    await _context.SaveChangesAsync();
+                    return new Result<string> { Success = true };
+                }    
+            }
+            catch (Exception)
+            {
+
+                return new Result<string> { Message = "Server error", Success = false };
+            }
+        }
+
         public async Task<ResultList<UserDTO>> GetAllUsers()
         {
             try
@@ -58,7 +91,7 @@ namespace tiki_shop.Services
                             select new UserDTO
                             {
                                 Address = user.Address, Balance = user.Balance, Commission = user.Commission, Email = user.Email, Id = user.Id,
-                                Password = user.Password, PhoneNumber = user.PhoneNumber, Status = user.Status, Role = role.Name, Fullname = user.Fullname 
+                                PhoneNumber = user.PhoneNumber, Status = user.Status, Role = role.Name, Fullname = user.Fullname 
                             };
                 var listUser = await query.ToListAsync();
                 //var json = JsonSerializer.Serialize(listUser);
@@ -71,36 +104,82 @@ namespace tiki_shop.Services
             }
         }
 
+        public async Task<Result<UserDTO>> GetUser()
+        {
+            try
+            {
+                ClaimsPrincipal User = _contextAccessor.HttpContext.User;
+                var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var foundUser = await _context.Users.FindAsync(id);
+                if(foundUser != null)
+                {
+                    var user = new UserDTO
+                    {
+                        Address = foundUser.Address,
+                        Balance = foundUser.Balance,
+                        Commission = foundUser.Commission,
+                        Email = foundUser.Email,
+                        Id = foundUser.Id,
+                        Fullname = foundUser.Fullname,
+                        PhoneNumber = foundUser.PhoneNumber,
+                        Status = foundUser.Status,
+                        Role = (await _context.Roles.FindAsync(foundUser.RoleId)).Name
+                    };
+                    return new Result<UserDTO> { Data = user, Success = true };
+                }
+                else
+                {
+                    return new Result<UserDTO> { Message = "User is not exist", Success = false };
+                }    
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
         public async Task<Result<string>> Login(string phoneNumber, string password)
         {
             try
             {
-                var query = from user in _context.Users
-                            join role in _context.Roles on user.RoleId equals role.Id
-                            where user.PhoneNumber == phoneNumber && user.Status
-                            select new UserDTO
-                            {
-                                Address = user.Address,
-                                Balance = user.Balance,
-                                Commission = user.Commission,
-                                Email = user.Email,
-                                Id = user.Id,
-                                Password = user.Password,
-                                PhoneNumber = user.PhoneNumber,
-                                Status = user.Status,
-                                Role = role.Name,
-                                Fullname = user.Fullname
-                            };
-                var userDTO = await query.FirstOrDefaultAsync();
-                if(userDTO == null)
+                //var query = from user in _context.Users
+                //            join role in _context.Roles on user.RoleId equals role.Id
+                //            where user.PhoneNumber == phoneNumber && user.Status
+                //            select new UserDTO
+                //            {
+                //                Address = user.Address,
+                //                Balance = user.Balance,
+                //                Commission = user.Commission,
+                //                Email = user.Email,
+                //                Id = user.Id,
+                //                PhoneNumber = user.PhoneNumber,
+                //                Status = user.Status,
+                //                Role = role.Name,
+                //                Fullname = user.Fullname
+                //            };
+                //var userDTO = await query.FirstOrDefaultAsync();
+                var user = await _context.Users.Where(x => x.PhoneNumber == phoneNumber && x.Status).FirstOrDefaultAsync();
+                if (user == null)
                 {
                     return new Result<string> { Message = "User is not exist", Success = false };
                 }
                 else
                 {
-                    if(Bcrypt.Verify(password, userDTO.Password))
-                    { 
-                        
+                    if(Bcrypt.Verify(password, user.Password))
+                    {
+                        var userDTO = new UserDTO
+                        {
+                            Address = user.Address,
+                            Balance = user.Balance,
+                            Commission = user.Commission,
+                            Email = user.Email,
+                            Id = user.Id,
+                            PhoneNumber = user.PhoneNumber,
+                            Status = user.Status,
+                            Role = (await _context.Roles.FindAsync(user.RoleId)).Name,
+                            Fullname = user.Fullname
+                        };
                         return new Result<string> { Message = "Login success", Success = true, Data = CreateToken(userDTO) };
                     }
                     else

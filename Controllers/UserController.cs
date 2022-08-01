@@ -6,7 +6,6 @@ using tiki_shop.Services;
 
 namespace tiki_shop.Controllers
 {
-    [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class UserController : ControllerBase
@@ -35,9 +34,31 @@ namespace tiki_shop.Controllers
             return Ok(res);   
         }
         [HttpGet]
+        [Authorize(Roles = "Admin, User")]
+        public async Task<IActionResult> GetUser()
+        {
+            var res = await _userServices.GetUser();
+            if (!res.Success)
+            {
+                return BadRequest(res);
+            }
+            return Ok(res);
+        }
+        [HttpGet("all")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllUsers()
         {
             var res = await _userServices.GetAllUsers();
+            return Ok(res);
+        }
+        [HttpPut("changepassword")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest req)
+        {
+            var res = await _userServices.ChangePassword(req.PhoneNumber, req.OldPassword, req.NewPassword);
+            if (!res.Success)
+            {
+                return BadRequest(res);
+            }
             return Ok(res);
         }
     }

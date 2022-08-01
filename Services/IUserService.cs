@@ -9,5 +9,7 @@ namespace tiki_shop.Services
         Task<Result<bool>> AddUser(UserRequest userRequest);
         Task<ResultList<UserDTO>> GetAllUsers();
         Task<Result<string>> Login(string phoneNumber, string password);
+        Task<Result<UserDTO>> GetUser();
+        Task<Result<string>> ChangePassword(string phoneNumber, string oldPassword, string newPassowrd);
     }
 }

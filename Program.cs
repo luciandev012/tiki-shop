@@ -13,13 +13,22 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers()
-    .AddFluentValidation(c => c.RegisterValidatorsFromAssemblyContaining(typeof(LoginRequestValidator)));
+    .AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<LoginRequestValidator>());
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 var connectionString = builder.Configuration.GetConnectionString("Connection");
 builder.Services.AddDbContext<TikiDbContext>(x => x.UseSqlServer(connectionString));
 builder.Services.AddScoped<IUserService, UserServices>();
+builder.Services.AddHttpContextAccessor();
+//services cors
+builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
+{
+    builder.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
+}));
+
+//builder.Services.AddScoped<IValidator<UserRequest>, UserRequestValidator>();
+//builder.Services.AddScoped<IValidator<LoginRequest>, LoginRequestValidator>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -41,6 +50,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors("corsapp");
 
 app.UseHttpsRedirection();
 
