@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using tiki_shop.Models;
 
@@ -11,9 +12,10 @@ using tiki_shop.Models;
 namespace tiki_shop.Migrations
 {
     [DbContext(typeof(TikiDbContext))]
-    partial class TikiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220801082143_AddDbSetSubcategory")]
+    partial class AddDbSetSubcategory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

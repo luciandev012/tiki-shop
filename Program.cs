@@ -20,6 +20,8 @@ builder.Services.AddSwaggerGen();
 var connectionString = builder.Configuration.GetConnectionString("Connection");
 builder.Services.AddDbContext<TikiDbContext>(x => x.UseSqlServer(connectionString));
 builder.Services.AddScoped<IUserService, UserServices>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddHttpContextAccessor();
 //services cors
 builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
