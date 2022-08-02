@@ -4,6 +4,7 @@ namespace tiki_shop.Models.DTO
 {
     public class OrderDTO
     {
+        public string? Id { get; set; }
         public string? UserId { get; set; }
         public float TotalPrice { get; set; }
         public bool Status { get; set; }

@@ -24,6 +24,7 @@ builder.Services.AddScoped<IUserService, UserServices>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IStorageService, StorageService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddHttpContextAccessor();
 //services cors
 builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>

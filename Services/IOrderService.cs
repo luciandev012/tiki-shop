@@ -7,5 +7,7 @@ namespace tiki_shop.Services
     public interface IOrderService
     {
         Task<Result<OrderDTO>> AddOrder(OrderRequest req);
+        Task<ResultList<OrderDTO>> GetAllOrder();
+        Task<ResultList<OrderDTO>> GetAllOrderByUser();
     }
 }
