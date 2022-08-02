@@ -7,6 +7,7 @@ using System.Reflection;
 using tiki_shop.Models;
 using tiki_shop.Models.Request;
 using tiki_shop.Services;
+using tiki_shop.Services.Common;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,7 @@ builder.Services.AddDbContext<TikiDbContext>(x => x.UseSqlServer(connectionStrin
 builder.Services.AddScoped<IUserService, UserServices>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IStorageService, StorageService>();
 builder.Services.AddHttpContextAccessor();
 //services cors
 builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>

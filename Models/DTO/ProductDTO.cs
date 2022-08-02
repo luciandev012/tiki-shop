@@ -12,7 +12,7 @@ namespace tiki_shop.Models.DTO
         public int Quantity { get; set; }
         public float Discount { get; set; }
         public int SoldQuantity { get; set; } = 0;
-        public List<Image>? Images { get; set; }
+        public List<string>? Images { get; set; }
         public List<ProductDetail>? ProductDetails { get; set; }
         public string? Description { get; set; }
         public float Rate { get; set; } = 5;

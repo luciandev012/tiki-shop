@@ -16,6 +16,7 @@ namespace tiki_shop.Models
         public DbSet<OrderDetail> OrderDetails { get; set; }
         public DbSet<Recharge> Recharges { get; set; }
         public DbSet<SubCategory> SubCategories { get; set; }
+        public DbSet<Image> Images { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

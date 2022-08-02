@@ -3,25 +3,29 @@ using tiki_shop.Models;
 using tiki_shop.Models.Common;
 using tiki_shop.Models.Entity;
 using tiki_shop.Models.Request.Category;
+using tiki_shop.Services.Common;
 
 namespace tiki_shop.Services
 {
     public class CategoryService : ICategoryService
     {
         private readonly TikiDbContext _context;
-        public CategoryService(TikiDbContext context)
+        private readonly IStorageService _storage;
+        public CategoryService(TikiDbContext context, IStorageService storage)
         {
             _context = context;
+            _storage = storage;
         }
 
-        public async Task<Result<Category>> AddCategory(string name)
+        public async Task<Result<Category>> AddCategory(CategoryRequest req)
         {
             try
             {
                 var category = new Category
                 {
                     Id = Guid.NewGuid().ToString(),
-                    Name = name
+                    Name = req.Name,
+                    Image = await _storage.SaveFileAsync(req.Image),
                 };
                 await _context.Categories.AddAsync(category);
                 await _context.SaveChangesAsync();
@@ -41,7 +45,8 @@ namespace tiki_shop.Services
                 {
                     Id = Guid.NewGuid().ToString(),
                     Name = req.Name,
-                    CategoryId = req.CategoryId
+                    CategoryId = req.CategoryId,
+                    Image = await _storage.SaveFileAsync(req.Image),
                 };
                 await _context.SubCategories.AddAsync(subCate);
                 await _context.SaveChangesAsync();

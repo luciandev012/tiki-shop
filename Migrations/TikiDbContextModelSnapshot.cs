@@ -55,7 +55,7 @@ namespace tiki_shop.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("Image");
+                    b.ToTable("Images");
                 });
 
             modelBuilder.Entity("tiki_shop.Models.Entity.Order", b =>
@@ -299,7 +299,7 @@ namespace tiki_shop.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "61df8706-c6b9-4ecb-bd8b-e73dc5725c1f",
+                            Id = "6d8d22c4-4e74-415b-bde5-c67d5934ae8e",
                             Address = "Hà Nội",
                             Balance = 0f,
                             Commission = 0f,

@@ -7,7 +7,7 @@ namespace tiki_shop.Services
     public interface ICategoryService
     {
         Task<ResultList<Category>> GetAllCategories();
-        Task<Result<Category>> AddCategory(string name);
+        Task<Result<Category>> AddCategory(CategoryRequest req);
         Task<Result<SubCategory>> AddSubCategory(SubCategoryRequest req);
     }
 }
