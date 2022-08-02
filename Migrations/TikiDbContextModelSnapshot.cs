@@ -95,6 +95,9 @@ namespace tiki_shop.Migrations
                     b.Property<string>("OrderId")
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int>("OrderQuantity")
+                        .HasColumnType("int");
+
                     b.Property<string>("ProductId")
                         .HasColumnType("nvarchar(max)");
 
@@ -299,7 +302,7 @@ namespace tiki_shop.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "6d8d22c4-4e74-415b-bde5-c67d5934ae8e",
+                            Id = "fcfd6650-3a8b-4343-9d35-2d12e07c057e",
                             Address = "Hà Nội",
                             Balance = 0f,
                             Commission = 0f,

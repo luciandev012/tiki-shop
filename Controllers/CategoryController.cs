@@ -37,7 +37,7 @@ namespace tiki_shop.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddCategory([FromBody] CategoryRequest req)
         {
-            var res = await _categoryServices.AddCategory(req.Name);
+            var res = await _categoryServices.AddCategory(req);
             if (!res.Success)
             {
                 return BadRequest(res);
