@@ -27,7 +27,7 @@ namespace tiki_shop.Services
                     float total = 0, commission = 0;
                     ClaimsPrincipal User = _contextAccessor.HttpContext.User;
                     var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                    var user = await _context.Users.FindAsync(id);
+                    var user = new User();
                     foreach (var orderDetail in req.OrderDetails)
                     {
                         var product = await _context.Products.FindAsync(orderDetail.ProductId);
@@ -49,7 +49,6 @@ namespace tiki_shop.Services
                         };
                         await _context.Orders.AddAsync(order);
                         user.Balance -= total;
-                        user.Commission += commission;
                         await _context.SaveChangesAsync();
                         var orderDTO = new OrderDTO
                         {

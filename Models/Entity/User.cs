@@ -15,16 +15,16 @@ namespace tiki_shop.Models.Entity
         [BsonElement("password")]
         public string? Password { get; set; }
         [BsonElement("balance")]
-        public float Balance { get; set; }
+        public float Balance { get; set; } = 0;
         [BsonElement("email")]
         public string? Email { get; set; }
         [BsonElement("address")]
         public string? Address { get; set; }
         [BsonElement("status")]
-        public bool Status { get; set; }
-        [BsonElement("roleId")]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string? RoleId { get; set; }
-        public ICollection<Recharge> Recharges { get; set; }
+        public bool Status { get; set; } = true;
+        [BsonElement("role")]
+        public string? Role { get; set; }
+        //[BsonRepresentation(BsonType.Array)]
+        //public List<Recharge>? Recharges { get; set; }
     }
 }

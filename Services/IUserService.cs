@@ -10,6 +10,7 @@ namespace tiki_shop.Services
         Task<ResultList<UserDTO>> GetAllUsers();
         Task<Result<string>> Login(string phoneNumber, string password);
         Task<Result<UserDTO>> GetUser();
+        Task<Result<UserDTO>> GetUserById(string reqId);
         Task<Result<string>> ChangePassword(string phoneNumber, string oldPassword, string newPassowrd);
     }
 }

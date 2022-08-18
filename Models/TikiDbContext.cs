@@ -7,8 +7,6 @@ namespace tiki_shop.Models
     {
         public TikiDbContext(DbContextOptions<TikiDbContext> options) : base(options) { }
 
-        public DbSet<User> Users { get; set; }
-        public DbSet<Role> Roles { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductDetail> ProductDetails { get; set; }
         public DbSet<Category> Categories { get; set; }
@@ -29,11 +27,6 @@ namespace tiki_shop.Models
         }
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            builder.Entity<Role>().HasKey(r => r.Id);
-            
-
-            builder.Entity<User>().HasKey(u => u.Id);
-            builder.Entity<User>().HasOne(u => u.Role).WithMany(r => r.Users).HasForeignKey(u => u.RoleId);
 
             builder.Entity<Product>().HasKey(p => p.Id);
             builder.Entity<Product>(e =>
@@ -79,7 +72,6 @@ namespace tiki_shop.Models
             builder.Entity<Recharge>(e =>
             {
                 e.Property(r => r.Id).HasMaxLength(100);
-                e.HasOne(r => r.User).WithMany(u => u.Recharges).HasForeignKey(r => r.UserId);
             });
 
             builder.Entity<Image>().HasKey(i => i.Id);
@@ -97,16 +89,11 @@ namespace tiki_shop.Models
                 Address = "Hà Nội",
                 Fullname = "Admin nè",
                 Balance = 0,
-                Commission = 0,
                 Email = "admin@email.com",
                 Password = "$2a$10$MEhfF4w8ga3GGcJrMW7iWu6RG0A1kUqC0FM0R9BbJjSd3yKxgBLM2",
                 PhoneNumber = "0123456789",
-                RoleId = 1,
                 Status = true
             });
-            
-            
-
             base.OnModelCreating(builder);
         }
     }

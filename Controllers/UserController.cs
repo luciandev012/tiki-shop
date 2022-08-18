@@ -44,6 +44,17 @@ namespace tiki_shop.Controllers
             }
             return Ok(res);
         }
+        [HttpGet("byId")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetUserById([FromQuery] string id)
+        {
+            var res = await _userServices.GetUserById(id);
+            if (!res.Success)
+            {
+                return BadRequest(res);
+            }
+            return Ok(res);
+        }
         [HttpGet("all")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllUsers()

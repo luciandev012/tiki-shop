@@ -1,9 +1,13 @@
-﻿namespace tiki_shop.Models.Entity
+﻿using MongoDB.Bson.Serialization.Attributes;
+
+namespace tiki_shop.Models.Entity
 {
     public class Role
     {
+        [BsonId]
+        [BsonRepresentation(MongoDB.Bson.BsonType.ObjectId)]
         public int Id { get; set; }
-        public string Name { get; set; }
-        public virtual ICollection<User> Users { get; set; }
+        [BsonElement("name")]
+        public string? Name { get; set; }
     }
 }
