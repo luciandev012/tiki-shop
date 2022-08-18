@@ -19,6 +19,7 @@ namespace tiki_shop.Services
     public class UserServices : IUserService
     {
         private readonly IMongoCollection<User> _userCollection;
+        private readonly IMongoCollection<Role> _roleCollection;
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _contextAccessor;
         public UserServices(IOptions<TikiDbSettings> tikiDb, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
@@ -26,6 +27,7 @@ namespace tiki_shop.Services
             var mongoClient = new MongoClient(tikiDb.Value.ConnectionString);
             var mongoDb = mongoClient.GetDatabase(tikiDb.Value.DatabaseName);
             _userCollection = mongoDb.GetCollection<User>("users");
+            _roleCollection = mongoDb.GetCollection<Role>("roles");
             _configuration = configuration;
             _contextAccessor = httpContextAccessor;
         }
@@ -210,6 +212,19 @@ namespace tiki_shop.Services
             {
 
                 throw;
+            }
+        }
+        public async Task<ResultList<Role>> GetRoles()
+        {
+            try
+            {
+                var roles = await _roleCollection.Find(_ => true).ToListAsync();
+                return new ResultList<Role> { Data = roles, Success = true };
+            }
+            catch (Exception)
+            {
+
+                return new ResultList<Role> { Success = false, Message = "Server error" };
             }
         }
         private string CreateToken(UserDTO user)

@@ -72,5 +72,16 @@ namespace tiki_shop.Controllers
             }
             return Ok(res);
         }
+        [HttpGet("role")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetRoles()
+        {
+            var res = await _userServices.GetRoles();
+            if (!res.Success)
+            {
+                return BadRequest(res);
+            }
+            return Ok(res);
+        }
     }
 }
