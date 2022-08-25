@@ -44,6 +44,17 @@ namespace tiki_shop.Controllers
             }
             return Ok(res);
         }
+        [HttpGet("byId")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetUserById([FromQuery] string id)
+        {
+            var res = await _userServices.GetUserById(id);
+            if (!res.Success)
+            {
+                return BadRequest(res);
+            }
+            return Ok(res);
+        }
         [HttpGet("all")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllUsers()
@@ -55,6 +66,17 @@ namespace tiki_shop.Controllers
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest req)
         {
             var res = await _userServices.ChangePassword(req.PhoneNumber, req.OldPassword, req.NewPassword);
+            if (!res.Success)
+            {
+                return BadRequest(res);
+            }
+            return Ok(res);
+        }
+        [HttpGet("role")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetRoles()
+        {
+            var res = await _userServices.GetRoles();
             if (!res.Success)
             {
                 return BadRequest(res);

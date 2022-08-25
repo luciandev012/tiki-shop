@@ -1,5 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Json;
@@ -15,12 +18,16 @@ namespace tiki_shop.Services
 {
     public class UserServices : IUserService
     {
-        private readonly TikiDbContext _context;
+        private readonly IMongoCollection<User> _userCollection;
+        private readonly IMongoCollection<Role> _roleCollection;
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _contextAccessor;
-        public UserServices(TikiDbContext context, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
+        public UserServices(IOptions<TikiDbSettings> tikiDb, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
         {
-            _context = context;
+            var mongoClient = new MongoClient(tikiDb.Value.ConnectionString);
+            var mongoDb = mongoClient.GetDatabase(tikiDb.Value.DatabaseName);
+            _userCollection = mongoDb.GetCollection<User>("users");
+            _roleCollection = mongoDb.GetCollection<Role>("roles");
             _configuration = configuration;
             _contextAccessor = httpContextAccessor;
         }
@@ -36,13 +43,11 @@ namespace tiki_shop.Services
                     Email = userRequest.Email,
                     Address = userRequest.Address,
                     Password = Bcrypt.HashPassword(userRequest.Password, salt),
-                    RoleId = 2,
-                    Id = Guid.NewGuid().ToString(),
+                    Role = "User",
                     Status = true,
                     Fullname = userRequest.FullName
                 };
-                await _context.Users.AddAsync(user);
-                await _context.SaveChangesAsync();
+                await _userCollection.InsertOneAsync(user);
                 return new Result<bool> { Success = true, Data = true, Message = ""};
             }
             catch (Exception)
@@ -58,7 +63,7 @@ namespace tiki_shop.Services
             {
                 ClaimsPrincipal User = _contextAccessor.HttpContext.User;
                 var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var foundUser = await _context.Users.FindAsync(id);
+                var foundUser = await _userCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
                 if(foundUser.PhoneNumber != phoneNumber)
                 {
                     return new Result<string> { Message = "Phone number not match", Success = false };
@@ -70,8 +75,9 @@ namespace tiki_shop.Services
                         return new Result<string> { Message = "Password not correct", Success = false };
                     }
                     var salt = Bcrypt.GenerateSalt(10);
-                    foundUser.Password = Bcrypt.HashPassword(newPassowrd, salt);
-                    await _context.SaveChangesAsync();
+                    var update = Builders<User>.Update.Set(s => s.Password, Bcrypt.HashPassword(newPassowrd, salt));
+                    var filter = Builders<User>.Filter.Eq("_id", ObjectId.Parse(id));
+                    await _userCollection.UpdateOneAsync(filter, update);
                     return new Result<string> { Success = true };
                 }    
             }
@@ -86,15 +92,16 @@ namespace tiki_shop.Services
         {
             try
             {
-                var query = from user in _context.Users
-                            join role in _context.Roles on user.RoleId equals role.Id
-                            select new UserDTO
-                            {
-                                Address = user.Address, Balance = user.Balance, Commission = user.Commission, Email = user.Email, Id = user.Id,
-                                PhoneNumber = user.PhoneNumber, Status = user.Status, Role = role.Name, Fullname = user.Fullname 
-                            };
-                var listUser = await query.ToListAsync();
-                //var json = JsonSerializer.Serialize(listUser);
+                var users = await _userCollection.Find(_ => true).ToListAsync();
+                var listUser = new List<UserDTO>();
+                foreach (var user in users)
+                {
+                    listUser.Add(new UserDTO {
+                        Id = user.Id, Address = user.Address, Balance = user.Balance, Email = user.Email,
+                        Fullname = user.Fullname, PhoneNumber = user.PhoneNumber, Role = user.Role,
+                        Status = user.Status
+                    });
+                }
                 return new ResultList<UserDTO> { Data = listUser, Message = "", Success = true};
             }
             catch (Exception)
@@ -103,34 +110,32 @@ namespace tiki_shop.Services
                 return new ResultList<UserDTO> { Message = "Server error", Success = false };
             }
         }
-
         public async Task<Result<UserDTO>> GetUser()
         {
             try
             {
                 ClaimsPrincipal User = _contextAccessor.HttpContext.User;
-                var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var foundUser = await _context.Users.FindAsync(id);
-                if(foundUser != null)
+                var reqId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var foundUser = await _userCollection.Find(x => x.Id == reqId).FirstOrDefaultAsync();
+                if (foundUser != null)
                 {
                     var user = new UserDTO
                     {
                         Address = foundUser.Address,
                         Balance = foundUser.Balance,
-                        Commission = foundUser.Commission,
                         Email = foundUser.Email,
                         Id = foundUser.Id,
                         Fullname = foundUser.Fullname,
                         PhoneNumber = foundUser.PhoneNumber,
                         Status = foundUser.Status,
-                        Role = (await _context.Roles.FindAsync(foundUser.RoleId)).Name
+                        Role = foundUser.Role
                     };
                     return new Result<UserDTO> { Data = user, Success = true };
                 }
                 else
                 {
                     return new Result<UserDTO> { Message = "User is not exist", Success = false };
-                }    
+                }
             }
             catch (Exception)
             {
@@ -139,46 +144,61 @@ namespace tiki_shop.Services
             }
         }
 
+        public async Task<Result<UserDTO>> GetUserById(string reqId)
+        {
+            try
+            {
+                var foundUser = await _userCollection.Find(x => x.Id == reqId).FirstOrDefaultAsync();
+                if (foundUser != null)
+                {
+                    var user = new UserDTO
+                    {
+                        Address = foundUser.Address,
+                        Balance = foundUser.Balance,
+                        Email = foundUser.Email,
+                        Id = foundUser.Id,
+                        Fullname = foundUser.Fullname,
+                        PhoneNumber = foundUser.PhoneNumber,
+                        Status = foundUser.Status,
+                        Role = foundUser.Role
+                    };
+                    return new Result<UserDTO> { Data = user, Success = true };
+                }
+                else
+                {
+                    return new Result<UserDTO> { Message = "User is not exist", Success = false };
+                }
+            }
+            catch (Exception)
+            {
+
+                return new Result<UserDTO> { Message = "User is not exist", Success = false };
+            }
+        }
+
         public async Task<Result<string>> Login(string phoneNumber, string password)
         {
             try
             {
-                //var query = from user in _context.Users
-                //            join role in _context.Roles on user.RoleId equals role.Id
-                //            where user.PhoneNumber == phoneNumber && user.Status
-                //            select new UserDTO
-                //            {
-                //                Address = user.Address,
-                //                Balance = user.Balance,
-                //                Commission = user.Commission,
-                //                Email = user.Email,
-                //                Id = user.Id,
-                //                PhoneNumber = user.PhoneNumber,
-                //                Status = user.Status,
-                //                Role = role.Name,
-                //                Fullname = user.Fullname
-                //            };
-                //var userDTO = await query.FirstOrDefaultAsync();
-                var user = await _context.Users.Where(x => x.PhoneNumber == phoneNumber && x.Status).FirstOrDefaultAsync();
-                if (user == null)
+                var foundUser = await _userCollection.Find(x => x.PhoneNumber == phoneNumber && x.Status).FirstOrDefaultAsync();
+                if (foundUser == null)
                 {
                     return new Result<string> { Message = "User is not exist", Success = false };
                 }
                 else
                 {
-                    if(Bcrypt.Verify(password, user.Password))
+                    if(Bcrypt.Verify(password, foundUser.Password))
                     {
                         var userDTO = new UserDTO
                         {
-                            Address = user.Address,
-                            Balance = user.Balance,
-                            Commission = user.Commission,
-                            Email = user.Email,
-                            Id = user.Id,
-                            PhoneNumber = user.PhoneNumber,
-                            Status = user.Status,
-                            Role = (await _context.Roles.FindAsync(user.RoleId)).Name,
-                            Fullname = user.Fullname
+                            Address = foundUser.Address,
+                            Balance = foundUser.Balance,
+                            Email = foundUser.Email,
+                            Id = foundUser.Id,
+                            Fullname = foundUser.Fullname,
+                            PhoneNumber = foundUser.PhoneNumber,
+                            Status = foundUser.Status,
+                            Role = foundUser.Role
                         };
                         return new Result<string> { Message = "Login success", Success = true, Data = CreateToken(userDTO) };
                     }
@@ -192,6 +212,19 @@ namespace tiki_shop.Services
             {
 
                 throw;
+            }
+        }
+        public async Task<ResultList<Role>> GetRoles()
+        {
+            try
+            {
+                var roles = await _roleCollection.Find(_ => true).ToListAsync();
+                return new ResultList<Role> { Data = roles, Success = true };
+            }
+            catch (Exception)
+            {
+
+                return new ResultList<Role> { Success = false, Message = "Server error" };
             }
         }
         private string CreateToken(UserDTO user)
