@@ -1,10 +1,17 @@
-﻿namespace tiki_shop.Models.Entity
+﻿using MongoDB.Bson.Serialization.Attributes;
+
+namespace tiki_shop.Models.Entity
 {
     public class Category
     {
+        [BsonId]
+        [BsonRepresentation(MongoDB.Bson.BsonType.ObjectId)]
         public string? Id { get; set; }
+        [BsonElement("name")]
         public string? Name { get; set; }
+        [BsonElement("image")]
         public string? Image { get; set; }
+        [BsonElement("subCategories")]
         public ICollection<SubCategory>? SubCategories { get; set; }
     }
 }

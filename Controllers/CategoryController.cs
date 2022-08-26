@@ -25,17 +25,12 @@ namespace tiki_shop.Controllers
             {
                 return BadRequest(res);
             }
-            JsonSerializerOptions options = new()
-            {
-                ReferenceHandler = ReferenceHandler.Preserve,
-                WriteIndented = true
-            };
-            var data = JsonSerializer.Serialize(res, options);
-            return new OkObjectResult(data);
+            var data = JsonSerializer.Serialize(res);
+            return Ok(data);
         }
         [HttpPost("addCategory")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> AddCategory([FromBody] CategoryRequest req)
+        public async Task<IActionResult> AddCategory([FromForm] CategoryRequest req)
         {
             var res = await _categoryServices.AddCategory(req);
             if (!res.Success)
@@ -46,7 +41,7 @@ namespace tiki_shop.Controllers
         }
         [HttpPost("addSubcate")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> AddSubCategory([FromBody] SubCategoryRequest req)
+        public async Task<IActionResult> AddSubCategory([FromForm] SubCategoryRequest req)
         {
             var res = await _categoryServices.AddSubCategory(req);
             if (!res.Success)

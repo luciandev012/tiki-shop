@@ -2,8 +2,8 @@
 {
     public class SubCategoryRequest
     {
-        public string Name { get; set; }
-        public string CategoryId { get; set; }
-        public IFormFile Image { get; set; }
+        public string? Name { get; set; }
+        public string? CategoryId { get; set; }
+        public IFormFile? Image { get; set; }
     }
 }

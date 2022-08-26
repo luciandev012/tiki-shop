@@ -140,7 +140,7 @@ namespace tiki_shop.Services
             catch (Exception)
             {
 
-                throw;
+                return new Result<UserDTO> { Message = "Server error", Success = false };
             }
         }
 

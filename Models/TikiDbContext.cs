@@ -29,12 +29,7 @@ namespace tiki_shop.Models
         {
 
             builder.Entity<Product>().HasKey(p => p.Id);
-            builder.Entity<Product>(e =>
-            {
-                e.Property(p => p.Id).HasMaxLength(100);
-                e.HasOne(p => p.SubCategory).WithMany(s => s.Products).HasForeignKey(p => p.SubCategoryId);
-            });
-
+            
             builder.Entity<Category>().HasKey(c => c.Id);
             builder.Entity<Category>(e =>
             {
@@ -42,11 +37,7 @@ namespace tiki_shop.Models
             });
 
             builder.Entity<SubCategory>().HasKey(s => s.Id);
-            builder.Entity<SubCategory>(e =>
-            {
-                e.Property(s => s.Id).HasMaxLength(100);
-                e.HasOne(s => s.Category).WithMany(c => c.SubCategories).HasForeignKey(s => s.CategoryId);
-            });
+            
 
             builder.Entity<ProductDetail>().HasKey(pd => pd.Id);
             builder.Entity<ProductDetail>(e =>
@@ -82,7 +73,7 @@ namespace tiki_shop.Models
             });
 
             // Seeding data
-            builder.Entity<Role>().HasData(new Role { Id = 1, Name = "Admin" }, new Role { Id = 2, Name = "User" });
+            builder.Entity<Role>().HasData(new Role { Name = "Admin" }, new Role { Name = "User" });
             builder.Entity<User>().HasData(new User
             {
                 Id = Guid.NewGuid().ToString(),

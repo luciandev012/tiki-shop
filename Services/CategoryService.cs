@@ -1,4 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using tiki_shop.Models;
 using tiki_shop.Models.Common;
 using tiki_shop.Models.Entity;
@@ -9,11 +12,13 @@ namespace tiki_shop.Services
 {
     public class CategoryService : ICategoryService
     {
-        private readonly TikiDbContext _context;
+        private readonly IMongoCollection<Category> _categoryCollection;
         private readonly IStorageService _storage;
-        public CategoryService(TikiDbContext context, IStorageService storage)
+        public CategoryService(IOptions<TikiDbSettings> tikiDb, IStorageService storage)
         {
-            _context = context;
+            var mongoClient = new MongoClient(tikiDb.Value.ConnectionString);
+            var mongoDb = mongoClient.GetDatabase(tikiDb.Value.DatabaseName);
+            _categoryCollection = mongoDb.GetCollection<Category>("categories");
             _storage = storage;
         }
 
@@ -23,12 +28,11 @@ namespace tiki_shop.Services
             {
                 var category = new Category
                 {
-                    Id = Guid.NewGuid().ToString(),
                     Name = req.Name,
                     Image = await _storage.SaveFileAsync(req.Image),
+                    SubCategories = new SubCategory[] {}
                 };
-                await _context.Categories.AddAsync(category);
-                await _context.SaveChangesAsync();
+                await _categoryCollection.InsertOneAsync(category);
                 return new Result<Category> { Data = category, Success = true };
             }
             catch (Exception)
@@ -41,16 +45,16 @@ namespace tiki_shop.Services
         {
             try
             {
+                var filter = Builders<Category>.Filter.Eq(c => c.Id, req.CategoryId);
                 var subCate = new SubCategory
                 {
-                    Id = Guid.NewGuid().ToString(),
+                    Id = ObjectId.GenerateNewId().ToString(),
                     Name = req.Name,
-                    CategoryId = req.CategoryId,
                     Image = await _storage.SaveFileAsync(req.Image),
                 };
-                await _context.SubCategories.AddAsync(subCate);
-                await _context.SaveChangesAsync();
-                return new Result<SubCategory> { Data= subCate, Success = true };
+                var update = Builders<Category>.Update.Push<SubCategory>(s => s.SubCategories, subCate);
+                var result = await _categoryCollection.FindOneAndUpdateAsync(filter, update);
+                return new Result<SubCategory> { Data = subCate, Success = true };
             }
             catch (Exception)
             {
@@ -63,11 +67,7 @@ namespace tiki_shop.Services
         {
             try
             {
-                var categories = await _context.Categories.ToListAsync();      
-                for(int i = 0; i < categories.Count; i++)
-                {
-                    categories[i].SubCategories = await _context.SubCategories.Where(x => x.CategoryId == categories[i].Id).ToListAsync();
-                }
+                var categories = await _categoryCollection.Find(_ => true).ToListAsync();
                 return new ResultList<Category> { Data = categories, Success = true };
             }
             catch (Exception)
